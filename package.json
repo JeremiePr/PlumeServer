@@ -1,0 +1,25 @@
+{
+    "name": "@jeje-devs/plume-server",
+    "version": "1.0.0",
+    "description": "Package for Web Api Node JS apps with Express in TypeScript",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "files": [
+        "/dist"
+    ],
+    "author": "jeje-devs",
+    "license": "ISC",
+    "dependencies": {
+        "@jeje-devs/plume-testing": "^2.1.5",
+        "@types/cors": "^2.8.13",
+        "@types/express": "^4.17.17",
+        "@types/node": "^20.5.9",
+        "cors": "^2.8.5",
+        "express": "^4.18.2",
+        "reflect-metadata": "^0.1.13"
+    },
+    "scripts": {
+        "build": "tsc",
+        "test": "tsc --sourceMap true && node ./dist/test/test.index.js"
+    }
+}
