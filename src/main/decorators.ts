@@ -41,7 +41,7 @@ export const Inject = (id: string) => (target: any, key: string, index: number) 
 
 export const Injectable = () => (target: any) =>
 {
-    if (manualInjects.some(x => x.target === target))
+    if (registeredServices.some(x => x.target === target))
         throw new Error('Service can\'t be injected twice');
 
     const service: Service = {
@@ -60,7 +60,7 @@ export const Injectable = () => (target: any) =>
 
 export const Controller = (route: string) => (target: any) =>
 {
-    if (manualInjects.some(x => x.target === target))
+    if (registeredServices.some(x => x.target === target))
         throw new Error('Controller can\'t be injected twice');
 
     const controllerMethods: Array<ControllerMethod> = [];
