@@ -26,7 +26,7 @@ const from = (httpSource: HttpSource, name: string) => (target: any, key: string
     if ((httpSource === 'route' || httpSource === 'query') && type.name !== 'String' && type.name !== 'Number' && type.name !== 'Boolean')
         throw new Error(`Endpoint '${target.constructor.name}.${key}'. Argument type '${type.name}' is invalid with the http source '${httpSource}'`);
 
-    if ((httpSource === 'body' || httpSource === 'header') && type.name !== 'Object')
+    if ((httpSource === 'body' || httpSource === 'header') && (type.name === 'String' || type.name === 'Number' || type.name === 'Boolean'))
         throw new Error(`Endpoint '${target.constructor.name}.${key}'. Argument type '${type.name}' is invalid with the http source '${httpSource}'`);
 
     parameters.push({ name, type: type.name, httpSource, target: target.constructor, key, index });
