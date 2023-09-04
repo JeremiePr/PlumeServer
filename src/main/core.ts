@@ -109,27 +109,33 @@ export class PlumeServer
         if (service.type === 'instance') throw new Error('Instance not registered');
 
         const typeDependencies = Reflect.getMetadata('design:paramtypes', target) ?? [];
-        const typeDependencyInstances = typeDependencies.map((dependency: any) => this.getInstance(dependency));
+        const typeDependencyInstances = typeDependencies.map((dependency: any, i: number) =>
+        {
+            const manualInject = service.manualInjects.find(x => x.index === i);
+            if (manualInject && ['Object', 'String', 'Number', 'Boolean'].includes(dependency.name)) return this.getInstance(manualInject.id);
+            else return this.getInstance(dependency);
+        });
 
         service.instance = new target(...typeDependencyInstances);
         return service.instance;
     }
 
-    public static async run(port: number, onApiErrors: (err: any) => void = () => { }, instances: Array<{ target: any, instance: any }> = []): Promise<{ server: Server, services: Array<{ target: any, instance: any }> }>
+    public static async run(port: number, onApiErrors: (err: any) => void = () => { }, instances: Array<{ id: any, instance: any }> = []): Promise<{ server: Server, services: Array<{ target: any, instance: any }> }>
     {
-        instances.forEach(({ target, instance }) => this.registerInstance(target, instance));
+        instances.forEach(({ id, instance }) => this.registerInstance(id, instance));
         const server = new PlumeServer(port, registeredServices, onApiErrors);
         return await server.run();
     }
 
-    private static registerInstance(target: any, instance: any): void
+    private static registerInstance(id: any, instance: any): void
     {
         const service: Service = {
             type: 'instance',
             name: null,
-            target: target,
+            target: id,
             instance: instance,
-            controllerData: null
+            controllerData: null,
+            manualInjects: []
         };
         registeredServices.push(service);
     }

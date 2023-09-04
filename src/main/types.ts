@@ -26,4 +26,5 @@ export interface Service
     target: any;
     instance: any;
     controllerData: ControllerData | null;
+    manualInjects: Array<{ id: string; index: number; }>;
 }

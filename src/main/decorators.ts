@@ -1,12 +1,12 @@
 import { registeredServices } from './core';
-import { ControllerMethod, ControllerMethodArgument, Service } from './types';
+import { ControllerMethod, Service } from './types';
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 type HttpSource = 'query' | 'route' | 'body' | 'header';
 
 const methods: Array<{ httpMethod: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'; route: string; target: any; key: string; }> = [];
-
 const parameters: Array<{ name: string; type: string; httpSource: 'query' | 'route' | 'body' | 'header'; target: any; key: string; index: number; }> = [];
+const manualInjects: Array<{ id: string; target: any; key: string; index: number; }> = [];
 
 const http = (method: HttpMethod, route: string) => (target: any, key: string) =>
 {
@@ -28,6 +28,11 @@ const from = (httpSource: HttpSource, name: string) => (target: any, key: string
 
 // Services
 
+export const inject = (id: string) => (target: any, key: string, index: number) =>
+{
+    manualInjects.push({ id, target, key, index });
+}
+
 export const injectable = () => (target: any) =>
 {
     const service: Service = {
@@ -35,7 +40,10 @@ export const injectable = () => (target: any) =>
         name: target.name,
         target,
         instance: null,
-        controllerData: null
+        controllerData: null,
+        manualInjects: manualInjects
+            .filter(x => x.target === target)
+            .map(x => ({ id: x.id, index: x.index }))
     };
 
     registeredServices.push(service);
@@ -69,7 +77,10 @@ export const controller = (route: string) => (target: any) =>
         name: target.name,
         target,
         instance: null,
-        controllerData: { route, controllerMethods }
+        controllerData: { route, controllerMethods },
+        manualInjects: manualInjects
+            .filter(x => x.target === target)
+            .map(x => ({ id: x.id, index: x.index }))
     };
 
     registeredServices.push(service);
