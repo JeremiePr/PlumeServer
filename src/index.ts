@@ -1,4 +1,4 @@
 import { PlumeServer } from './main/core';
-import { controller, fromBody, fromHeader, fromQuery, fromRoute, httpDelete, httpGet, httpPatch, httpPost, httpPut, injectable } from './main/decorators';
+import { Controller, FromBody, FromHeader, FromQuery, FromRoute, HttpDelete, HttpGet, HttpPatch, HttpPost, HttpPut, Injectable } from './main/decorators';
 
-export { PlumeServer, injectable, controller, httpGet, httpPost, httpPut, httpPatch, httpDelete, fromQuery, fromRoute, fromBody, fromHeader };
+export { PlumeServer, Injectable, Controller, HttpGet, HttpPost, HttpPut, HttpPatch, HttpDelete, FromQuery, FromRoute, FromBody, FromHeader };

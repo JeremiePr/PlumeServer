@@ -8,13 +8,19 @@ const methods: Array<{ httpMethod: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'; 
 const parameters: Array<{ name: string; type: string; httpSource: 'query' | 'route' | 'body' | 'header'; target: any; key: string; index: number; }> = [];
 const manualInjects: Array<{ id: string; target: any; key: string; index: number; }> = [];
 
-const http = (method: HttpMethod, route: string) => (target: any, key: string) =>
+const http = (httpMethod: HttpMethod, route: string) => (target: any, key: string) =>
 {
-    methods.push({ httpMethod: method, route, target: target.constructor, key });
+    if (methods.some(x => x.target === target.constructor && x.httpMethod === httpMethod && x.route === route))
+        throw new Error('Another endpoint in the same controller with the same route already exists');
+
+    methods.push({ httpMethod: httpMethod, route, target: target.constructor, key });
 }
 
 const from = (httpSource: HttpSource, name: string) => (target: any, key: string, index: number) =>
 {
+    if (['body', 'header'].includes(httpSource) && parameters.some(x => x.target === target && x.key === key && x.httpSource === httpSource))
+        throw new Error('Endpoint already has another http source of the same type between \'fromBody\' and \'fromHeader\'');
+
     const type = Reflect.getMetadata('design:paramtypes', target, key)[index];
 
     if ((httpSource === 'route' || httpSource === 'query') && type.name !== 'String' && type.name !== 'Number' && type.name !== 'Boolean')
@@ -28,13 +34,16 @@ const from = (httpSource: HttpSource, name: string) => (target: any, key: string
 
 // Services
 
-export const inject = (id: string) => (target: any, key: string, index: number) =>
+export const Inject = (id: string) => (target: any, key: string, index: number) =>
 {
     manualInjects.push({ id, target, key, index });
 }
 
-export const injectable = () => (target: any) =>
+export const Injectable = () => (target: any) =>
 {
+    if (manualInjects.some(x => x.target === target))
+        throw new Error('Service can\'t be injected twice');
+
     const service: Service = {
         type: 'service',
         name: target.name,
@@ -49,8 +58,11 @@ export const injectable = () => (target: any) =>
     registeredServices.push(service);
 }
 
-export const controller = (route: string) => (target: any) =>
+export const Controller = (route: string) => (target: any) =>
 {
+    if (manualInjects.some(x => x.target === target))
+        throw new Error('Controller can\'t be injected twice');
+
     const controllerMethods: Array<ControllerMethod> = [];
     for (const method of methods.filter(m => m.target === target))
     {
@@ -88,15 +100,15 @@ export const controller = (route: string) => (target: any) =>
 
 // Controller Methods
 
-export const httpGet = (route: string) => http('GET', route);
-export const httpPost = (route: string) => http('POST', route);
-export const httpPut = (route: string) => http('PUT', route);
-export const httpPatch = (route: string) => http('PATCH', route);
-export const httpDelete = (route: string) => http('DELETE', route);
+export const HttpGet = (route: string = '') => http('GET', route);
+export const HttpPost = (route: string = '') => http('POST', route);
+export const HttpPut = (route: string = '') => http('PUT', route);
+export const HttpPatch = (route: string = '') => http('PATCH', route);
+export const HttpDelete = (route: string = '') => http('DELETE', route);
 
 // Controller Parameters
 
-export const fromQuery = (name: string) => from('query', name);
-export const fromRoute = (name: string) => from('route', name);
-export const fromBody = () => from('body', '');
-export const fromHeader = () => from('header', '');
+export const FromQuery = (name: string) => from('query', name);
+export const FromRoute = (name: string) => from('route', name);
+export const FromBody = () => from('body', '');
+export const FromHeader = () => from('header', '');

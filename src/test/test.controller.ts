@@ -1,6 +1,6 @@
-import { controller, fromBody, fromQuery, fromRoute, httpDelete, httpGet, httpPatch, httpPost, httpPut, injectable } from '../main/decorators';
+import { Controller, FromBody, FromQuery, FromRoute, HttpDelete, HttpGet, HttpPatch, HttpPost, HttpPut, Injectable } from '../main/decorators';
 
-@injectable()
+@Injectable()
 export class TestService
 {
     private readonly _config = { name: 'TsRoller', purpose: 'Test' };
@@ -16,12 +16,12 @@ export class TestService
     }
 }
 
-@controller('api/Test')
+@Controller('api/Test')
 export class TestController
 {
     public constructor(private readonly _customTestService: TestService) { }
 
-    @httpGet('config')
+    @HttpGet('config')
     public getConfig(): any
     {
         return {
@@ -30,51 +30,51 @@ export class TestController
         };
     }
 
-    @httpGet('foo/:param1/bar/:param2')
+    @HttpGet('foo/:param1/bar/:param2')
     public get1(
-        @fromRoute('param1') param1: number,
-        @fromRoute('param2') param2: string,
-        @fromQuery('param3') param3: string): any
+        @FromRoute('param1') param1: number,
+        @FromRoute('param2') param2: string,
+        @FromQuery('param3') param3: string): any
     {
         return { param1, param2, param3 };
     }
 
-    @httpGet('id/:id')
+    @HttpGet('id/:id')
     public get2(
-        @fromRoute('id') id: number,
-        @fromQuery('language') language: string): any
+        @FromRoute('id') id: number,
+        @FromQuery('language') language: string): any
     {
         return { id, language }
     }
 
-    @httpPost(':param1')
+    @HttpPost(':param1')
     public post(
-        @fromRoute('param1') param1: number,
-        @fromQuery('param2') param2: string,
-        @fromBody() body: any): any
+        @FromRoute('param1') param1: number,
+        @FromQuery('param2') param2: string,
+        @FromBody() body: any): any
     {
         return { param1, param2, body };
     }
 
-    @httpPut(':param1')
+    @HttpPut(':param1')
     public put(
-        @fromRoute('param1') param1: number,
-        @fromBody() body: any): any
+        @FromRoute('param1') param1: number,
+        @FromBody() body: any): any
     {
         return { param1, body };
     }
 
-    @httpPatch('foo/bar/baz/:id')
+    @HttpPatch('foo/bar/baz/:id')
     public patch(
-        @fromRoute('id') id: number,
-        @fromBody() body: any): any
+        @FromRoute('id') id: number,
+        @FromBody() body: any): any
     {
         return { id, body };
     }
 
-    @httpDelete('foo/bar/:id')
+    @HttpDelete('foo/bar/:id')
     public delete(
-        @fromRoute('id') id: number): any
+        @FromRoute('id') id: number): any
     {
         return { id };
     }
