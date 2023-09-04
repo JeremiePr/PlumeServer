@@ -46,7 +46,7 @@ export class PlumeServer
     private async buildController(controller: Service): Promise<void>
     {
         const instance = this.getInstance(controller.target);
-        if (!instance) throw new Error('Controller instance not found');
+        if (!instance) throw new Error(`Controller instance of type '${controller.name}' not found`);
 
         for (const method of controller.controllerData.controllerMethods)
         {
@@ -104,9 +104,9 @@ export class PlumeServer
     private getInstance(target: any): any
     {
         const service = this._services.find(s => s.target === target);
-        if (!service) throw new Error('Service not registered');
+        if (!service) throw new Error(`Service of type '${target?.name}' is not registered`);
         if (service.instance) return service.instance;
-        if (service.type === 'instance') throw new Error('Instance not registered');
+        if (service.type === 'instance') throw new Error(`Instance of key '${target}' is not registered`);
 
         const typeDependencies = Reflect.getMetadata('design:paramtypes', target) ?? [];
         const typeDependencyInstances = typeDependencies.map((dependency: any, i: number) =>

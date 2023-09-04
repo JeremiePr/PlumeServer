@@ -11,7 +11,7 @@ const manualInjects: Array<{ id: string; target: any; key: string; index: number
 const http = (httpMethod: HttpMethod, route: string) => (target: any, key: string) =>
 {
     if (methods.some(x => x.target === target.constructor && x.httpMethod === httpMethod && x.route === route))
-        throw new Error('Another endpoint in the same controller with the same route already exists');
+        throw new Error(`Another endpoint '${target.constructor.name}' in the same controller with the same route '${route}' already exists`);
 
     methods.push({ httpMethod: httpMethod, route, target: target.constructor, key });
 }
@@ -19,15 +19,15 @@ const http = (httpMethod: HttpMethod, route: string) => (target: any, key: strin
 const from = (httpSource: HttpSource, name: string) => (target: any, key: string, index: number) =>
 {
     if (['body', 'header'].includes(httpSource) && parameters.some(x => x.target === target && x.key === key && x.httpSource === httpSource))
-        throw new Error('Endpoint already has another http source of the same type between \'fromBody\' and \'fromHeader\'');
+        throw new Error(`Endpoint '${target.constructor.name}.${key}' already has another http source as '${httpSource}'`);
 
     const type = Reflect.getMetadata('design:paramtypes', target, key)[index];
 
     if ((httpSource === 'route' || httpSource === 'query') && type.name !== 'String' && type.name !== 'Number' && type.name !== 'Boolean')
-        throw new Error('Argument type invalid');
+        throw new Error(`Endpoint '${target.constructor.name}.${key}'. Argument type '${type.name}' is invalid with the http source '${httpSource}'`);
 
     if ((httpSource === 'body' || httpSource === 'header') && type.name !== 'Object')
-        throw new Error('Argument type invalid');
+        throw new Error(`Endpoint '${target.constructor.name}.${key}'. Argument type '${type.name}' is invalid with the http source '${httpSource}'`);
 
     parameters.push({ name, type: type.name, httpSource, target: target.constructor, key, index });
 }
@@ -42,7 +42,7 @@ export const Inject = (id: string) => (target: any, key: string, index: number) 
 export const Injectable = () => (target: any) =>
 {
     if (registeredServices.some(x => x.target === target))
-        throw new Error('Service can\'t be injected twice');
+        throw new Error(`Service '${target.name}' cannot be injected twice`);
 
     const service: Service = {
         type: 'service',
@@ -61,7 +61,7 @@ export const Injectable = () => (target: any) =>
 export const Controller = (route: string) => (target: any) =>
 {
     if (registeredServices.some(x => x.target === target))
-        throw new Error('Controller can\'t be injected twice');
+        throw new Error(`Controller '${target.name}' cannot be injected twice`);
 
     const controllerMethods: Array<ControllerMethod> = [];
     for (const method of methods.filter(m => m.target === target))
@@ -74,7 +74,7 @@ export const Controller = (route: string) => (target: any) =>
 
         const types = Reflect.getMetadata('design:paramtypes', target.prototype, method.key) ?? [];
         if (controllerParameters.length !== types.length)
-            throw new Error('Some endpoint method arguments are incorrect');
+            throw new Error(`Controller '${target.name}' endpoint ${method.key}. Some arguments are not registered`);
 
         controllerMethods.push({
             key: method.key,
