@@ -186,12 +186,6 @@ export class ElementController
 }
 ```
 
-If you want to register and inject a custom instance, you need to do:
-
-```ts
-
-```
-
 ### Starting server
 
 To start the server you need to run the **PlumeServer.run** method:
