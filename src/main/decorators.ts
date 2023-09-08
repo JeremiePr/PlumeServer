@@ -32,14 +32,7 @@ const from = (httpSource: HttpSource, name: string) => (target: any, key: string
     parameters.push({ name, type: type.name, httpSource, target: target.constructor, key, index });
 }
 
-// Services
-
-export const Inject = (id: string) => (target: any, key: string, index: number) =>
-{
-    manualInjects.push({ id, target, key, index });
-}
-
-export const Injectable = () => (target: any) =>
+const injectable = () => (target: any) =>
 {
     if (registeredServices.some(x => x.target === target))
         throw new Error(`Service '${target.name}' cannot be injected twice`);
@@ -58,7 +51,7 @@ export const Injectable = () => (target: any) =>
     registeredServices.push(service);
 }
 
-export const Controller = (route: string) => (target: any) =>
+const controller = (route: string) => (target: any) =>
 {
     if (registeredServices.some(x => x.target === target))
         throw new Error(`Controller '${target.name}' cannot be injected twice`);
@@ -96,18 +89,18 @@ export const Controller = (route: string) => (target: any) =>
     };
 
     registeredServices.push(service);
-}
+};
 
-// Controller Methods
+// Exports
 
+export const Inject = (id: string) => (target: any, key: string, index: number) => void manualInjects.push({ id, target, key, index });
+export const Injectable = () => injectable();
+export const Controller = (route: string) => controller(route);
 export const HttpGet = (route: string = '') => http('GET', route);
 export const HttpPost = (route: string = '') => http('POST', route);
 export const HttpPut = (route: string = '') => http('PUT', route);
 export const HttpPatch = (route: string = '') => http('PATCH', route);
 export const HttpDelete = (route: string = '') => http('DELETE', route);
-
-// Controller Parameters
-
 export const FromQuery = (name: string) => from('query', name);
 export const FromRoute = (name: string) => from('route', name);
 export const FromBody = () => from('body', '');
