@@ -22,13 +22,6 @@ const from = (httpSource: HttpSource, name: string) => (target: any, key: any, i
         throw new Error(`Endpoint '${target.constructor.name}.${key}' already has another http source as '${httpSource}'`);
 
     const type = Reflect.getMetadata('design:paramtypes', target, key)[index];
-
-    if ((httpSource === 'route' || httpSource === 'query') && type.name !== 'Object' && type.name !== 'String' && type.name !== 'Number' && type.name !== 'Boolean')
-        throw new Error(`Endpoint '${target.constructor.name}.${key}'. Argument type '${type.name}' is invalid with the http source '${httpSource}'`);
-
-    if ((httpSource === 'body' || httpSource === 'header') && (type.name === 'String' || type.name === 'Number' || type.name === 'Boolean'))
-        throw new Error(`Endpoint '${target.constructor.name}.${key}'. Argument type '${type.name}' is invalid with the http source '${httpSource}'`);
-
     parameters.push({ name, type: type.name, httpSource, target: target.constructor, key, index });
 }
 
