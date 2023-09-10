@@ -1,9 +1,9 @@
-import { Controller, FromBody, FromQuery, FromRoute, HttpDelete, HttpGet, HttpPatch, HttpPost, HttpPut, Injectable } from '../main/decorators';
+import { Controller, FromBody, FromQuery, FromRoute, HttpDelete, HttpGet, HttpPatch, HttpPost, HttpPut, Inject, Injectable } from '../main/decorators';
 
 @Injectable()
 export class TestService
 {
-    private readonly _config = { name: 'TsRoller', purpose: 'Test' };
+    public constructor(@Inject('config') private readonly _config: { name: string; purpose: string; }) { }
 
     public getName(): string
     {

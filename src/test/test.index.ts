@@ -146,7 +146,8 @@ const tests: TestEntrySet<TestParams> = {
 
 async function initialize(): Promise<TestParams>
 {
-    const { server } = await PlumeServer.run(port);
+    const config = { name: 'TsRoller', purpose: 'Test' };
+    const { server } = await PlumeServer.run(port, undefined, [{ id: 'config', instance: config }]);
     return { closeServer: () => server.close() };
 }
 

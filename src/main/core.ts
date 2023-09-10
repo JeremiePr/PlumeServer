@@ -8,8 +8,8 @@ export const registeredServices: Array<Service> = [];
 
 export class PlumeServer
 {
-    private _express: express.Express;
-    private _router: express.Router;
+    private _express: express.Express | null = null;
+    private _router: express.Router | null = null;
 
     private constructor(
         private readonly _port: number,
@@ -47,6 +47,7 @@ export class PlumeServer
     {
         const instance = this.getInstance(controller.target);
         if (!instance) throw new Error(`Controller instance of type '${controller.name}' not found`);
+        if (!controller.controllerData?.controllerMethods) return;
 
         for (const method of controller.controllerData.controllerMethods)
         {
@@ -54,11 +55,11 @@ export class PlumeServer
             const endpoint = this.getEndpoint(method, instance);
             switch (method.httpMethod)
             {
-                case 'GET': this._router.get(route, endpoint); break;
-                case 'POST': this._router.post(route, endpoint); break;
-                case 'PUT': this._router.put(route, endpoint); break;
-                case 'PATCH': this._router.patch(route, endpoint); break;
-                case 'DELETE': this._router.delete(route, endpoint); break;
+                case 'GET': this._router?.get(route, endpoint); break;
+                case 'POST': this._router?.post(route, endpoint); break;
+                case 'PUT': this._router?.put(route, endpoint); break;
+                case 'PATCH': this._router?.patch(route, endpoint); break;
+                case 'DELETE': this._router?.delete(route, endpoint); break;
             }
         }
     }
@@ -104,7 +105,11 @@ export class PlumeServer
     private getInstance(target: any): any
     {
         const service = this._services.find(s => s.target === target);
-        if (!service) throw new Error(`Service of type '${target?.name}' is not registered`);
+        if (!service)
+        {
+            if (typeof target === 'string') throw new Error(`Service of name '${target}' is not registered`);
+            else throw new Error(`Service of type '${target?.name}' is not registered`);
+        }
         if (service.instance) return service.instance;
         if (service.type === 'instance') throw new Error(`Instance of key '${target}' is not registered`);
 
@@ -120,8 +125,11 @@ export class PlumeServer
         return service.instance;
     }
 
-    public static async run(port: number, onApiErrors: (err: any) => void = () => { }, instances: Array<{ id: any, instance: any }> = []): Promise<{ server: Server, services: Array<{ target: any, instance: any }> }>
+    public static async run(port: number, onApiErrors?: (err: any) => void, instances?: Array<{ id: any, instance: any }>): Promise<{ server: Server, services: Array<{ target: any, instance: any }> }>
     {
+        instances ??= [];
+        onApiErrors ??= () => { };
+
         instances.forEach(({ id, instance }) => this.registerInstance(id, instance));
         const server = new PlumeServer(port, registeredServices, onApiErrors);
         return await server.run();

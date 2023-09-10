@@ -8,7 +8,7 @@ const methods: Array<{ httpMethod: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'; 
 const parameters: Array<{ name: string; type: string; httpSource: 'query' | 'route' | 'body' | 'header'; target: any; key: string; index: number; }> = [];
 const manualInjects: Array<{ id: string; target: any; key: string; index: number; }> = [];
 
-const http = (httpMethod: HttpMethod, route: string) => (target: any, key: string) =>
+const http = (httpMethod: HttpMethod, route: string) => (target: any, key: any) =>
 {
     if (methods.some(x => x.target === target.constructor && x.httpMethod === httpMethod && x.route === route))
         throw new Error(`Another endpoint '${target.constructor.name}' in the same controller with the same route '${route}' already exists`);
@@ -16,7 +16,7 @@ const http = (httpMethod: HttpMethod, route: string) => (target: any, key: strin
     methods.push({ httpMethod: httpMethod, route, target: target.constructor, key });
 }
 
-const from = (httpSource: HttpSource, name: string) => (target: any, key: string, index: number) =>
+const from = (httpSource: HttpSource, name: string) => (target: any, key: any, index: number) =>
 {
     if (['body', 'header'].includes(httpSource) && parameters.some(x => x.target === target && x.key === key && x.httpSource === httpSource))
         throw new Error(`Endpoint '${target.constructor.name}.${key}' already has another http source as '${httpSource}'`);
@@ -93,7 +93,7 @@ const controller = (route: string) => (target: any) =>
 
 // Exports
 
-export const Inject = (id: string) => (target: any, key: string, index: number) => void manualInjects.push({ id, target, key, index });
+export const Inject = (id: string) => (target: any, key: any, index: number) => void manualInjects.push({ id, target, key, index });
 export const Injectable = () => injectable();
 export const Controller = (route: string) => controller(route);
 export const HttpGet = (route: string = '') => http('GET', route);
