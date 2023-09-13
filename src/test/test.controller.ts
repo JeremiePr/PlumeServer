@@ -1,4 +1,4 @@
-import { Controller, FromBody, FromQuery, FromRoute, HttpDelete, HttpGet, HttpPatch, HttpPost, HttpPut, Inject, Injectable } from '../main/decorators';
+import { Controller, FromBody, FromHeader, FromQuery, FromRoute, HttpDelete, HttpGet, HttpPatch, HttpPost, HttpPut, Inject, Injectable } from '../main/decorators';
 
 @Injectable()
 export class TestService

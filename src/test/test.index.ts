@@ -1,16 +1,13 @@
 import { TestEntrySet, runTests, theBoolean, theNumber, theObject, theString } from '@jeje-devs/plume-testing';
-import './test.controller';
 import { PlumeServer } from '../main/core';
+
+import './test.controller';
+import { TestService } from './test.controller';
 
 const port = 3071;
 const baseApiTestRoute = `http://localhost:${port}/api/Test`;
 
-interface TestParams
-{
-    closeServer: () => void;
-}
-
-const tests: TestEntrySet<TestParams> = {
+const tests: TestEntrySet<PlumeServer> = {
 
     'TestEndpointGetConfig': async () =>
     {
@@ -144,16 +141,18 @@ const tests: TestEntrySet<TestParams> = {
 
 };
 
-async function initialize(): Promise<TestParams>
+async function initialize(): Promise<PlumeServer>
 {
-    const config = { name: 'TsRoller', purpose: 'Test' };
-    const { server } = await PlumeServer.run(port, undefined, [{ id: 'config', instance: config }]);
-    return { closeServer: () => server.close() };
+    const host = PlumeServer.createHost();
+    host.onApiErrors = err => console.error(err);
+    host.registerInstance('config', { name: 'TsRoller', purpose: 'Test' });
+
+    return await host.serve(port);
 }
 
-function terminate(params: TestParams): void
+function terminate(host: PlumeServer): void
 {
-    params.closeServer();
+    host.close();
 }
 
 runTests(tests, initialize, terminate);

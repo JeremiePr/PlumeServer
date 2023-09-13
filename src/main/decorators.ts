@@ -5,7 +5,7 @@ type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 type HttpSource = 'query' | 'route' | 'body' | 'header';
 
 const methods: Array<{ httpMethod: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'; route: string; target: any; key: string; }> = [];
-const parameters: Array<{ name: string; type: string; httpSource: 'query' | 'route' | 'body' | 'header'; target: any; key: string; index: number; }> = [];
+const parameters: Array<{ name?: string; type: string; httpSource: 'query' | 'route' | 'body' | 'header'; target: any; key: string; index: number; }> = [];
 const manualInjects: Array<{ id: string; target: any; key: string; index: number; }> = [];
 
 const http = (httpMethod: HttpMethod, route: string) => (target: any, key: any) =>
@@ -16,7 +16,7 @@ const http = (httpMethod: HttpMethod, route: string) => (target: any, key: any) 
     methods.push({ httpMethod: httpMethod, route, target: target.constructor, key });
 }
 
-const from = (httpSource: HttpSource, name: string) => (target: any, key: any, index: number) =>
+const from = (httpSource: HttpSource, name?: string) => (target: any, key: any, index: number) =>
 {
     if (['body', 'header'].includes(httpSource) && parameters.some(x => x.target === target && x.key === key && x.httpSource === httpSource))
         throw new Error(`Endpoint '${target.constructor.name}.${key}' already has another http source as '${httpSource}'`);
@@ -52,15 +52,16 @@ const controller = (route: string) => (target: any) =>
     const controllerMethods: Array<ControllerMethod> = [];
     for (const method of methods.filter(m => m.target === target))
     {
-        const controllerParameters = parameters
-            .filter(p => p.target === target)
-            .filter(p => p.key === method.key)
-            .sort((a, b) => a.index - b.index)
-            .map(p => ({ name: p.name, type: p.type, httpSource: p.httpSource }));
+        const types: Array<any> = Reflect.getMetadata('design:paramtypes', target.prototype, method.key) ?? [];
 
-        const types = Reflect.getMetadata('design:paramtypes', target.prototype, method.key) ?? [];
-        if (controllerParameters.length !== types.length)
-            throw new Error(`Controller '${target.name}' endpoint ${method.key}. Some arguments are not registered`);
+        const controllerParameters = types
+            .map((_, i: number): { name?: string, type: string, httpSource: 'query' | 'route' | 'body' | 'header' } =>
+            {
+                const parameter = parameters.find(p => p.target === target && p.key === method.key && p.index === i);
+                if (!parameter) return { name: undefined, type: typeof {}, httpSource: 'query' };
+
+                return { name: parameter.name, type: parameter.type, httpSource: parameter.httpSource };
+            })
 
         controllerMethods.push({
             key: method.key,
@@ -97,4 +98,4 @@ export const HttpDelete = (route: string = '') => http('DELETE', route);
 export const FromQuery = (name: string) => from('query', name);
 export const FromRoute = (name: string) => from('route', name);
 export const FromBody = () => from('body', '');
-export const FromHeader = () => from('header', '');
+export const FromHeader = (name?: string) => from('header', name ?? '');

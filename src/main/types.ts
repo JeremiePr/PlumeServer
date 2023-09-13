@@ -1,6 +1,6 @@
 export interface ControllerMethodArgument
 {
-    name: string;
+    name?: string;
     type: string;
     httpSource: 'query' | 'route' | 'body' | 'header';
 }

@@ -1,6 +1,6 @@
 import * as cors from 'cors';
 import * as express from 'express';
-import { Server } from 'http';
+import { IncomingMessage, Server, ServerResponse } from 'http';
 import 'reflect-metadata';
 import { ControllerMethod, Service } from './types';
 
@@ -8,44 +8,28 @@ export const registeredServices: Array<Service> = [];
 
 export class PlumeServer
 {
+    private _server: Server<typeof IncomingMessage, typeof ServerResponse> | null = null;
     private _express: express.Express | null = null;
     private _router: express.Router | null = null;
+    private _port = 0;
+    private _isRunning = false;
 
-    private constructor(
-        private readonly _port: number,
-        private readonly _services: Array<Service>,
-        private readonly _onApiError: (err: any) => void) { }
+    public onApiErrors?: (err: any) => Promise<void> | void;
 
-    public async run(): Promise<{ server: Server, services: Array<{ target: any, instance: any }> }>
+    private constructor(private readonly _services: Array<Service>) { }
+
+    private initialize(): void
     {
         this._express = express();
         this._router = express.Router();
-
         this._express.use(express.urlencoded({ extended: true }));
         this._express.use(express.json());
         this._express.use(cors());
-
-        for (const service of this._services)
-        {
-            service.instance = this.getInstance(service.target);
-        }
-
-        for (const service of this._services.filter(s => s.type === 'controller'))
-        {
-            await this.buildController(service);
-        }
-
-        const server = this._express.listen(this._port);
-        const services = this._services.filter(s => !!s.instance).map(s => ({ target: s.target, instance: s.instance }));
-
-        this._express.use('/', this._router);
-
-        return { server, services };
     }
 
     private async buildController(controller: Service): Promise<void>
     {
-        const instance = this.getInstance(controller.target);
+        const instance = this.resolveInstance(controller.target);
         if (!instance) throw new Error(`Controller instance of type '${controller.name}' not found`);
         if (!controller.controllerData?.controllerMethods) return;
 
@@ -76,10 +60,10 @@ export class PlumeServer
                         let result: any;
                         switch (p.httpSource)
                         {
-                            case 'query': result = req.query[p.name]; break;
-                            case 'route': result = req.params[p.name]; break;
-                            case 'body': result = req.body; break;
-                            case 'header': result = req.headers; break;
+                            case 'query': result = p.name ? req.query[p.name] : undefined; break;
+                            case 'route': result = p.name ? req.params[p.name] : undefined; break;
+                            case 'body': result = p.name ? req.body[p.name] : req.body; break;
+                            case 'header': result = p.name ? req.headers[p.name] : req.headers; break;
                         }
 
                         if (result && p.type === 'Number') result = +result;
@@ -95,14 +79,14 @@ export class PlumeServer
             catch (err)
             {
                 const error: any = err;
-                this._onApiError(error);
-
+                this.onApiErrors?.call(this, error);
+                if (this.onApiErrors) this.onApiErrors(error);
                 res.status(500).json(error);
             }
         };
     }
 
-    private getInstance(target: any): any
+    private resolveInstance(target: any): any
     {
         const service = this._services.find(s => s.target === target);
         if (!service)
@@ -117,25 +101,15 @@ export class PlumeServer
         const typeDependencyInstances = typeDependencies.map((dependency: any, i: number) =>
         {
             const manualInject = service.manualInjects.find(x => x.index === i);
-            if (manualInject && ['Object', 'String', 'Number', 'Boolean'].includes(dependency.name)) return this.getInstance(manualInject.id);
-            else return this.getInstance(dependency);
+            if (manualInject && ['Object', 'String', 'Number', 'Boolean'].includes(dependency.name)) return this.resolveInstance(manualInject.id);
+            else return this.resolveInstance(dependency);
         });
 
         service.instance = new target(...typeDependencyInstances);
-        return service.instance;
+        return service.instance ?? null;
     }
 
-    public static async run(port: number, onApiErrors?: (err: any) => void, instances?: Array<{ id: any, instance: any }>): Promise<{ server: Server, services: Array<{ target: any, instance: any }> }>
-    {
-        instances ??= [];
-        onApiErrors ??= () => { };
-
-        instances.forEach(({ id, instance }) => this.registerInstance(id, instance));
-        const server = new PlumeServer(port, registeredServices, onApiErrors);
-        return await server.run();
-    }
-
-    private static registerInstance(id: any, instance: any): void
+    public registerInstance(id: string, instance: any): void
     {
         const service: Service = {
             type: 'instance',
@@ -145,6 +119,47 @@ export class PlumeServer
             controllerData: null,
             manualInjects: []
         };
-        registeredServices.push(service);
+        this._services.push(service);
+    }
+
+    public getService<T>(target: any): T
+    {
+        if (!this._isRunning) throw new Error('Unable to retrieve a service before it is running');
+        return this._services.find(s => s.target === target)?.instance;
+    }
+
+    public async serve(port: number): Promise<PlumeServer>
+    {
+        if (!this._express || !this._router)
+            throw new Error('Error when running host');
+
+        if (port <= 0)
+            throw new Error('Port is invalid');
+
+        this._port = port;
+
+        for (const service of this._services.filter(s => s.type === 'controller'))
+        {
+            await this.buildController(service);
+        }
+
+        this._server = this._express.listen(this._port);
+        this._express.use('/', this._router);
+
+        this._isRunning = true;
+
+        return this;
+    }
+
+    public close(): void
+    {
+        this._server?.close();
+    }
+
+    public static createHost(): PlumeServer
+    {
+        const host = new PlumeServer(registeredServices);
+        host.initialize();
+        return host;
     }
 }

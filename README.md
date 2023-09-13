@@ -40,7 +40,8 @@ export class PlanetController
     }
 }
 
-PlumeServer.run(8080);
+const host = PlumeServer.createHost();
+host.serve(8080);
 ```
 
 ## Technologies
@@ -188,7 +189,7 @@ export class ElementController
 
 ### Starting server
 
-To start the server you need to run the **PlumeServer.run** method:
+To start the server you need to run the **PlumeServer.createHost** and **host.serve** methods:
 ```ts
 import { Controller, PlumeServer } from '@jeje-devs/plume-server';
 
@@ -201,11 +202,10 @@ const singletonToInject = {
     value2: 'Bar'
 };
 
-PlumeServer.run(
-    port,
-    err => console.error(err),
-    [{ id: 'customSingleton', instance: singletonToInject }]
-).then(() => console.log('Server running'));
+const host = PlumeServer.createHost();
+host.onApiErrors = (err: any) => console.error(err);
+host.registerInstance('customSingleton', singletonToInject);
+host.serve(port).then(() => console.log('Server is running'));
 ```
 
 ## Contributors
