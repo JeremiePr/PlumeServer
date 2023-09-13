@@ -1,6 +1,6 @@
 {
     "name": "@jeje-devs/plume-server",
-    "version": "2.0.1",
+    "version": "2.0.2",
     "description": "Package for Web Api Node JS apps with Express in TypeScript",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",

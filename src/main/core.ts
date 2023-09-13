@@ -122,10 +122,10 @@ export class PlumeServer
         this._services.push(service);
     }
 
-    public getService<T>(target: any): T
+    public getService<T>(target: any): T | null
     {
         if (!this._isRunning) throw new Error('Unable to retrieve a service before it is running');
-        return this._services.find(s => s.target === target)?.instance;
+        return this._services.find(s => s.target === target)?.instance ?? null;
     }
 
     public async serve(port: number): Promise<PlumeServer>
