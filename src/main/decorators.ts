@@ -1,4 +1,5 @@
 import { registeredServices } from './core';
+import { IRequestHandler } from './handlers';
 import { ControllerMethod, Service } from './types';
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
@@ -85,11 +86,28 @@ const controller = (route: string) => (target: any) =>
     registeredServices.push(service);
 };
 
+const requestHandler = () => <T extends new (...args: Array<any>) => IRequestHandler>(target: T) =>
+{
+    const service: Service = {
+        type: 'handler',
+        name: target.name,
+        target,
+        instance: null,
+        controllerData: null,
+        manualInjects: manualInjects
+            .filter(x => x.target === target)
+            .map(x => ({ id: x.id, index: x.index }))
+    };
+
+    registeredServices.push(service);
+}
+
 // Exports
 
 export const Inject = (id: string) => (target: any, key: any, index: number) => void manualInjects.push({ id, target, key, index });
 export const Injectable = () => injectable();
 export const Controller = (route: string) => controller(route);
+export const RequestHandler = () => requestHandler();
 export const HttpGet = (route: string = '') => http('GET', route);
 export const HttpPost = (route: string = '') => http('POST', route);
 export const HttpPut = (route: string = '') => http('PUT', route);

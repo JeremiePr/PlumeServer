@@ -2,7 +2,7 @@ import { TestEntrySet, runTests, theBoolean, theNumber, theObject, theString } f
 import { PlumeServer } from '../main/core';
 
 import './test.controller';
-import { TestService } from './test.controller';
+import './test.handlers';
 
 const port = 3071;
 const baseApiTestRoute = `http://localhost:${port}/api/Test`;
@@ -144,9 +144,7 @@ const tests: TestEntrySet<PlumeServer> = {
 async function initialize(): Promise<PlumeServer>
 {
     const host = PlumeServer.createHost();
-    host.onApiErrors = err => console.error(err);
     host.registerInstance('config', { name: 'TsRoller', purpose: 'Test' });
-
     return await host.serve(port);
 }
 

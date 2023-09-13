@@ -21,7 +21,7 @@ export interface ControllerData
 
 export interface Service
 {
-    type: 'service' | 'controller' | 'instance';
+    type: 'service' | 'controller' | 'instance' | 'handler';
     name: string | null;
     target: any;
     instance: any;

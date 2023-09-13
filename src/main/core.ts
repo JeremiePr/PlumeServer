@@ -3,6 +3,7 @@ import * as express from 'express';
 import { IncomingMessage, Server, ServerResponse } from 'http';
 import 'reflect-metadata';
 import { ControllerMethod, Service } from './types';
+import { IRequestHandler } from './handlers';
 
 export const registeredServices: Array<Service> = [];
 
@@ -13,8 +14,6 @@ export class PlumeServer
     private _router: express.Router | null = null;
     private _port = 0;
     private _isRunning = false;
-
-    public onApiErrors?: (err: any) => Promise<void> | void;
 
     private constructor(private readonly _services: Array<Service>) { }
 
@@ -48,9 +47,9 @@ export class PlumeServer
         }
     }
 
-    private getEndpoint(method: ControllerMethod, instance: any): ((req: any, res: any) => Promise<void>)
+    private getEndpoint(method: ControllerMethod, instance: any): ((request: any, response: any) => Promise<void>)
     {
-        return async (req: any, res: any) =>
+        return async (request: any, response: any) =>
         {
             try
             {
@@ -60,10 +59,10 @@ export class PlumeServer
                         let result: any;
                         switch (p.httpSource)
                         {
-                            case 'query': result = p.name ? req.query[p.name] : undefined; break;
-                            case 'route': result = p.name ? req.params[p.name] : undefined; break;
-                            case 'body': result = p.name ? req.body[p.name] : req.body; break;
-                            case 'header': result = p.name ? req.headers[p.name] : req.headers; break;
+                            case 'query': result = p.name ? request.query[p.name] : undefined; break;
+                            case 'route': result = p.name ? request.params[p.name] : undefined; break;
+                            case 'body': result = p.name ? request.body[p.name] : request.body; break;
+                            case 'header': result = p.name ? request.headers[p.name] : request.headers; break;
                         }
 
                         if (result && p.type === 'Number') result = +result;
@@ -72,16 +71,28 @@ export class PlumeServer
                         return result;
                     });
 
-                const response = await instance[method.key].apply(instance, args);
+                const requestHandlers = this._services.filter(s => s.type === 'handler');
 
-                res.status(200).json(response);
+                const handle = async (handlerIndex: number, args: Array<any>): Promise<any> =>
+                {
+                    if (handlerIndex < requestHandlers.length)
+                    {
+                        const handler: IRequestHandler = this.resolveInstance(requestHandlers[handlerIndex].target);
+                        const next = (args: Array<any>) => handle(handlerIndex + 1, args);
+                        return await handler.handle(args, next, request);
+                    }
+
+                    return await instance[method.key].apply(instance, args);
+                };
+
+                const result = await handle(0, args);
+
+                response.status(200).json(result);
             }
             catch (err)
             {
                 const error: any = err;
-                this.onApiErrors?.call(this, error);
-                if (this.onApiErrors) this.onApiErrors(error);
-                res.status(500).json(error);
+                response.status(500).json(error);
             }
         };
     }
