@@ -1,6 +1,5 @@
 import { registeredServices } from './core';
 import { IRequestHandler } from './handlers';
-import { Result } from './result';
 import { ControllerMethod, Service } from './types';
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
@@ -10,7 +9,7 @@ const methods: Array<{ httpMethod: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'; 
 const parameters: Array<{ name?: string; type: string; httpSource: 'query' | 'route' | 'body' | 'header'; target: any; key: string; index: number; }> = [];
 const manualInjects: Array<{ id: string; target: any; key: string; index: number; }> = [];
 
-const http = <T>(httpMethod: HttpMethod, route: string) => (target: any, key: string | symbol, _: TypedPropertyDescriptor<(...args: Array<any>) => Promise<Result<T>>>) =>
+const http = <T>(httpMethod: HttpMethod, route: string) => (target: any, key: string | symbol) =>
 {
     if (methods.some(x => x.target === target.constructor && x.httpMethod === httpMethod && x.route === route))
         throw new Error(`Another endpoint '${target.constructor.name}' in the same controller with the same route '${route}' already exists`);

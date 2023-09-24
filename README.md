@@ -15,7 +15,7 @@ PlumeServer is an easy to use tool to create a quick Web API using Node.js and E
 
 Example:
 ```ts
-import { Controller, HttpGet, FromRoute, PlumeServer, Injectable, Result } from '@jeje-devs/plume-server';
+import { Controller, HttpGet, FromRoute, PlumeServer, Injectable, Result, ok } from '@jeje-devs/plume-server';
 
 @Injectable()
 export class PlanetService
@@ -34,9 +34,9 @@ export class PlanetController
         private readonly _planetService: PlanetService) { }
 
     @HttpGet(':name')
-    public async getPlanets(@FromRoute('name') name: string): Promise<Result<Array<string>>>
+    public getPlanets(@FromRoute('name') name: string): Result<Array<string>>
     {
-        return await Result.ok(this._planetService.getPlanets(name));
+        return ok(this._planetService.getPlanets(name));
     }
 }
 
@@ -67,9 +67,9 @@ export class MyController
 Create the different http methods using the decorators:
 ```ts
 @HttpGet('hello')
-public async sayHello(): Promise<Result<string>>
+public sayHello(): Result<string>
 {
-    return await Result.ok('Hello World!');
+    return ok('Hello World!');
 }
 ```
 
@@ -119,7 +119,7 @@ public addCar(@FromBody() car: Car)
 
 Here is an example of what you can achieve:
 ```ts
-import { Controller, HttpGet, HttpPost, HttpPut, HttpDelete, FromBody, Injectable, Result } from '@jeje-devs/plume-server';
+import { Controller, HttpGet, HttpPost, HttpPut, HttpDelete, FromBody, Injectable, Result, ok, noContent } from '@jeje-devs/plume-server';
 import { Car } from 'src/models/car.model';
 import { CarService } from 'src/services/car.service';
 
@@ -133,28 +133,28 @@ export class CarController
     public async getCars(@FromQuery('name') name: string, @FromBody('brand') brand: string): Promise<Result<Array<Car>>>
     {
         const data = await this._carService.getCars(name, brand);
-        return await Result.ok(data);
+        return ok(data);
     }
 
     @HttpPost()
     public async createCar(@FromBody() car: Car): Promise<Result<void>>
     {
         await this._carService.createCar(car);
-        return await Result.noContent();
+        return noContent();
     }
 
     @HttpPut(':id')
     public async updateCar(@FromRoute('id') id: number, @FromBody() car: Car): Promise<Result<void>>
     {
         await this._carService.updateCar(id, car);
-        return await Result.noContent();
+        return noContent();
     }
 
     @HttpDelete(':id')
     public async deleteCar(@FromRoute('id') id: number): Promise<Result<void>>
     {
         await this._carService.deleteCar(id);
-        return await Result.noContent();
+        return noContent();
     }
 }
 ```
@@ -166,7 +166,7 @@ Typically, every other service classes referenced by the **@Controller** classes
 You will need to add the dependencies in the class constructor.
 
 ```ts
-import { Controller, HttpGet, Injectable, Result } from '@jeje-devs/plume-server';
+import { Controller, HttpGet, Injectable, Result, ok } from '@jeje-devs/plume-server';
 
 @Injectable()
 export class ElementService
@@ -184,10 +184,10 @@ export class ElementController
         private readonly _elementService: ElementService) { }
 
     @HttpGet()
-    public async getElements(): Promise<Result<Array<string>>>
+    public getElements(): Result<Array<string>>
     {
         const data = this._elementService.getElements();
-        return Result.ok(data);
+        return ok(data);
     }
 }
 ```

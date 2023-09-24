@@ -28,36 +28,36 @@ export class Result<T>
         return this._isSuccess;
     }
 
-    private constructor(status: number, data: T | null, error: string | null, isSuccess: boolean)
+    public constructor(status: number, data: T | null, error: string | null, isSuccess: boolean)
     {
         this._status = status;
         this._data = data;
         this._error = error;
         this._isSuccess = isSuccess;
     }
+}
 
-    public static ok<T>(data: T): Promise<Result<T>>
-    {
-        return new Promise(resolve => resolve(new Result(200, data, null, true)));
-    }
+export function ok<T>(data: T): Result<T>
+{
+    return new Result(200, data, null, true);
+}
 
-    public static noContent(): Promise<Result<void>>
-    {
-        return new Promise(resolve => resolve(new Result(204, null, null, true)));
-    }
+export function noContent(): Result<void>
+{
+    return new Result(204, null, null, true);
+}
 
-    public static success2xx<T>(status: NumberRange<200, 299>, data: T): Promise<Result<T>>
-    {
-        return new Promise(resolve => resolve(new Result(status, data, null, true)));
-    }
+export function success2xx<T>(status: NumberRange<200, 299>, data: T): Result<T>
+{
+    return new Result(status, data, null, true);
+}
 
-    public static requestError4xx(status: NumberRange<400, 499>, error: string): Promise<Result<void>>
-    {
-        return new Promise(resolve => resolve(new Result(status, null, error, false)));
-    }
+export function requestError4xx(status: NumberRange<400, 499>, error: string): Result<void>
+{
+    return new Result(status, null, error, false);
+}
 
-    public static serverError5xx(status: NumberRange<500, 599>, error: string): Promise<Result<void>>
-    {
-        return new Promise(resolve => resolve(new Result(status, null, error, false)));
-    }
+export function serverError5xx(status: NumberRange<500, 599>, error: string): Result<void>
+{
+    return new Result(status, null, error, false);
 }
