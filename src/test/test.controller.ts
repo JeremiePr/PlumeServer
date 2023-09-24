@@ -1,4 +1,6 @@
-import { Controller, FromBody, FromHeader, FromQuery, FromRoute, HttpDelete, HttpGet, HttpPatch, HttpPost, HttpPut, Inject, Injectable } from '../main/decorators';
+import { Controller, FromBody, FromQuery, FromRoute, HttpDelete, HttpGet, HttpPatch, HttpPost, HttpPut, Inject, Injectable, RequestHandler } from '../main/decorators';
+import { IRequestHandler } from '../main/handlers';
+import { Result } from '../main/result';
 
 @Injectable()
 export class TestService
@@ -22,60 +24,75 @@ export class TestController
     public constructor(private readonly _customTestService: TestService) { }
 
     @HttpGet('config')
-    public getConfig(): any
+    public async getConfig(): Promise<Result<any>>
     {
-        return {
-            name: this._customTestService.getName(),
-            purpose: this._customTestService.getPurpose()
-        };
+        return await Result.ok({ name: this._customTestService.getName(), purpose: this._customTestService.getPurpose() });
     }
 
     @HttpGet('foo/:param1/bar/:param2')
-    public get1(
+    public async get1(
         @FromRoute('param1') param1: number,
         @FromRoute('param2') param2: string,
-        @FromQuery('param3') param3: string): any
+        @FromQuery('param3') param3: string): Promise<Result<any>>
     {
-        return { param1, param2, param3 };
+        return await Result.ok({ param1, param2, param3 });
     }
 
     @HttpGet('id/:id')
-    public get2(
+    public async get2(
         @FromRoute('id') id: number,
-        @FromQuery('language') language: string): any
+        @FromQuery('language') language: string): Promise<Result<any>>
     {
-        return { id, language }
+        return await Result.ok({ id, language });
     }
 
     @HttpPost(':param1')
-    public post(
+    public async post(
         @FromRoute('param1') param1: number,
         @FromQuery('param2') param2: string,
-        @FromBody() body: any): any
+        @FromBody() body: any): Promise<Result<any>>
     {
-        return { param1, param2, body };
+        return await Result.ok({ param1, param2, body });
     }
 
     @HttpPut(':param1')
-    public put(
+    public async put(
         @FromRoute('param1') param1: number,
-        @FromBody() body: any): any
+        @FromBody() body: any): Promise<Result<any>>
     {
-        return { param1, body };
+        return await Result.ok({ param1, body });
     }
 
     @HttpPatch('foo/bar/baz/:id')
-    public patch(
+    public async patch(
         @FromRoute('id') id: number,
-        @FromBody() body: any): any
+        @FromBody() body: any): Promise<Result<any>>
     {
-        return { id, body };
+        return await Result.ok({ id, body })
     }
 
     @HttpDelete('foo/bar/:id')
-    public delete(
-        @FromRoute('id') id: number): any
+    public async delete(
+        @FromRoute('id') id: number): Promise<Result<any>>
     {
-        return { id };
+        return await Result.ok({ id })
+    }
+}
+
+@RequestHandler()
+export class ErrorHandler implements IRequestHandler
+{
+    public async handle(args: Array<any>, next: (args: Array<any>) => Promise<Result<any>>): Promise<Result<any>>
+    {
+        try
+        {
+            return await next(args);
+        }
+        catch (err)
+        {
+            const error: any = err;
+            console.error(error);
+            throw err;
+        }
     }
 }

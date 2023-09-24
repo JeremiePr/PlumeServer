@@ -7,7 +7,7 @@ export interface ControllerMethodArgument
 
 export interface ControllerMethod
 {
-    key: string;
+    key: string | symbol;
     httpMethod: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
     route: string;
     controllerParameters: Array<ControllerMethodArgument>;
@@ -26,5 +26,6 @@ export interface Service
     target: any;
     instance: any;
     controllerData: ControllerData | null;
+    handlerPattern: string | null;
     manualInjects: Array<{ id: string; index: number; }>;
 }

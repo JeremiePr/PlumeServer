@@ -4,6 +4,7 @@ import { IncomingMessage, Server, ServerResponse } from 'http';
 import 'reflect-metadata';
 import { ControllerMethod, Service } from './types';
 import { IRequestHandler } from './handlers';
+import { Result } from './result';
 
 export const registeredServices: Array<Service> = [];
 
@@ -35,7 +36,7 @@ export class PlumeServer
         for (const method of controller.controllerData.controllerMethods)
         {
             const route = `/${controller.controllerData.route}/${method.route}`;
-            const endpoint = this.getEndpoint(method, instance);
+            const endpoint = this.getEndpoint(controller, method, instance);
             switch (method.httpMethod)
             {
                 case 'GET': this._router?.get(route, endpoint); break;
@@ -47,7 +48,7 @@ export class PlumeServer
         }
     }
 
-    private getEndpoint(method: ControllerMethod, instance: any): ((request: any, response: any) => Promise<void>)
+    private getEndpoint(controller: Service, method: ControllerMethod, instance: any): ((request: any, response: any) => Promise<void>)
     {
         return async (request: any, response: any) =>
         {
@@ -71,9 +72,9 @@ export class PlumeServer
                         return result;
                     });
 
-                const requestHandlers = this._services.filter(s => s.type === 'handler');
+                const requestHandlers = this._services.filter(s => s.type === 'handler' && (!s.handlerPattern || controller.controllerData?.route?.startsWith(s.handlerPattern)));
 
-                const handle = async (handlerIndex: number, args: Array<any>): Promise<any> =>
+                const handle = async (handlerIndex: number, args: Array<any>): Promise<Result<any>> =>
                 {
                     if (handlerIndex < requestHandlers.length)
                     {
@@ -86,8 +87,7 @@ export class PlumeServer
                 };
 
                 const result = await handle(0, args);
-
-                response.status(200).json(result);
+                response.status(result.status).json(result.isSuccess ? result.data : result.error);
             }
             catch (err)
             {
@@ -128,6 +128,7 @@ export class PlumeServer
             target: id,
             instance: instance,
             controllerData: null,
+            handlerPattern: null,
             manualInjects: []
         };
         this._services.push(service);

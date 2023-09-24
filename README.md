@@ -15,7 +15,7 @@ PlumeServer is an easy to use tool to create a quick Web API using Node.js and E
 
 Example:
 ```ts
-import { Controller, HttpGet, FromRoute, PlumeServer, Injectable } from '@jeje-devs/plume-server';
+import { Controller, HttpGet, FromRoute, PlumeServer, Injectable, Result } from '@jeje-devs/plume-server';
 
 @Injectable()
 export class PlanetService
@@ -34,9 +34,9 @@ export class PlanetController
         private readonly _planetService: PlanetService) { }
 
     @HttpGet(':name')
-    public getPlanets(@FromRoute('name') name: string): Array<string>
+    public async getPlanets(@FromRoute('name') name: string): Promise<Result<Array<string>>>
     {
-        return this._planetService.getPlanets(name);
+        return await Result.ok(this._planetService.getPlanets(name));
     }
 }
 
@@ -67,9 +67,9 @@ export class MyController
 Create the different http methods using the decorators:
 ```ts
 @HttpGet('hello')
-public sayHello(): string
+public async sayHello(): Promise<Result<string>>
 {
-    return 'Hello World!';
+    return await Result.ok('Hello World!');
 }
 ```
 
@@ -89,13 +89,13 @@ The types must be **string**, **number** or **boolean**
 ```ts
 // Endpoint url: /api/controller/cars?model=208&brand=Peugeot
 @HttpGet('cars')
-public getCars(@FromQuery('model') model: string, @FromQuery('brand') brand: string): Array<Car>
+public async getCars(@FromQuery('model') model: string, @FromQuery('brand') brand: string): Promise<Result<Array<Car>>>
 {
     // ...
 }
 
 @HttpGet('cars/:id')
-public getCarById(@FromRoute('id') id: number): Car
+public async getCarById(@FromRoute('id') id: number): Promise<Result<Car>>
 {
     // ...
 }
@@ -119,7 +119,7 @@ public addCar(@FromBody() car: Car)
 
 Here is an example of what you can achieve:
 ```ts
-import { Controller, HttpGet, HttpPost, HttpPut, HttpDelete, FromBody, Injectable } from '@jeje-devs/plume-server';
+import { Controller, HttpGet, HttpPost, HttpPut, HttpDelete, FromBody, Injectable, Result } from '@jeje-devs/plume-server';
 import { Car } from 'src/models/car.model';
 import { CarService } from 'src/services/car.service';
 
@@ -130,27 +130,31 @@ export class CarController
         private readonly _carService: CarService) { }
 
     @HttpGet()
-    public async getCars(@FromQuery('name') name: string, @FromBody('brand') brand: string): Promise<Array<Car>>
+    public async getCars(@FromQuery('name') name: string, @FromBody('brand') brand: string): Promise<Result<Array<Car>>>
     {
-        return await this._carService.getCars(name, brand);
+        const data = await this._carService.getCars(name, brand);
+        return await Result.ok(data);
     }
 
     @HttpPost()
-    public async createCar(@FromBody() car: Car): Promise<void>
+    public async createCar(@FromBody() car: Car): Promise<Result<void>>
     {
         await this._carService.createCar(car);
+        return await Result.noContent();
     }
 
     @HttpPut(':id')
-    public async updateCar(@FromRoute('id') id: number, @FromBody() car: Car): Promise<void>
+    public async updateCar(@FromRoute('id') id: number, @FromBody() car: Car): Promise<Result<void>>
     {
         await this._carService.updateCar(id, car);
+        return await Result.noContent();
     }
 
     @HttpDelete(':id')
-    public async deleteCar(@FromRoute('id') id: number): Promise<void>
+    public async deleteCar(@FromRoute('id') id: number): Promise<Result<void>>
     {
         await this._carService.deleteCar(id);
+        return await Result.noContent();
     }
 }
 ```
@@ -162,7 +166,7 @@ Typically, every other service classes referenced by the **@Controller** classes
 You will need to add the dependencies in the class constructor.
 
 ```ts
-import { Controller, HttpGet, Injectable } from '@jeje-devs/plume-server';
+import { Controller, HttpGet, Injectable, Result } from '@jeje-devs/plume-server';
 
 @Injectable()
 export class ElementService
@@ -180,9 +184,10 @@ export class ElementController
         private readonly _elementService: ElementService) { }
 
     @HttpGet()
-    public getElements(): Array<string>
+    public async getElements(): Promise<Result<Array<string>>>
     {
-        return this._elementService.getElements();
+        const data = this._elementService.getElements();
+        return Result.ok(data);
     }
 }
 ```
