@@ -34,7 +34,7 @@ export class PlanetController
         private readonly _planetService: PlanetService) { }
 
     @HttpGet(':name')
-    public getPlanets(@FromRoute('name') name: string): Result<Array<string>>
+    public async getPlanets(@FromRoute('name') name: string): Promise<Result<Array<string>>>
     {
         return ok(this._planetService.getPlanets(name));
     }
@@ -67,7 +67,7 @@ export class MyController
 Create the different http methods using the decorators:
 ```ts
 @HttpGet('hello')
-public sayHello(): Result<string>
+public async sayHello(): Promise<Result<string>>
 {
     return ok('Hello World!');
 }
@@ -184,7 +184,7 @@ export class ElementController
         private readonly _elementService: ElementService) { }
 
     @HttpGet()
-    public getElements(): Result<Array<string>>
+    public async getElements(): Promise<Result<Array<string>>>
     {
         const data = this._elementService.getElements();
         return ok(data);

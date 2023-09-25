@@ -24,56 +24,56 @@ export class TestController
     public constructor(private readonly _customTestService: TestService) { }
 
     @HttpGet('config')
-    public getConfig(): Result<any>
+    public async getConfig(): Promise<Result<any>>
     {
         return ok({ name: this._customTestService.getName(), purpose: this._customTestService.getPurpose() });
     }
 
     @HttpGet('foo/:param1/bar/:param2')
-    public get1(
+    public async get1(
         @FromRoute('param1') param1: number,
         @FromRoute('param2') param2: string,
-        @FromQuery('param3') param3: string): Result<any>
+        @FromQuery('param3') param3: string): Promise<Result<any>>
     {
         return ok({ param1, param2, param3 });
     }
 
     @HttpGet('id/:id')
-    public get2(
+    public async get2(
         @FromRoute('id') id: number,
-        @FromQuery('language') language: string): Result<any>
+        @FromQuery('language') language: string): Promise<Result<any>>
     {
         return ok({ id, language });
     }
 
     @HttpPost(':param1')
-    public post(
+    public async post(
         @FromRoute('param1') param1: number,
         @FromQuery('param2') param2: string,
-        @FromBody() body: any): Result<any>
+        @FromBody() body: any): Promise<Result<any>>
     {
         return ok({ param1, param2, body });
     }
 
     @HttpPut(':param1')
-    public put(
+    public async put(
         @FromRoute('param1') param1: number,
-        @FromBody() body: any): Result<any>
+        @FromBody() body: any): Promise<Result<any>>
     {
         return ok({ param1, body });
     }
 
     @HttpPatch('foo/bar/baz/:id')
-    public patch(
+    public async patch(
         @FromRoute('id') id: number,
-        @FromBody() body: any): Result<any>
+        @FromBody() body: any): Promise<Result<any>>
     {
         return ok({ id, body });
     }
 
     @HttpDelete('foo/bar/:id')
-    public delete(
-        @FromRoute('id') id: number): Result<any>
+    public async delete(
+        @FromRoute('id') id: number): Promise<Result<any>>
     {
         return ok({ id });
     }
