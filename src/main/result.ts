@@ -47,17 +47,17 @@ export function noContent(): Result<void>
     return new Result(204, null, null, true);
 }
 
-export function success2xx<T>(status: NumberRange<200, 299>, data: T): Result<T>
+export function success2xx<T>(status: NumberRange<200, 300>, data: T): Result<T>
 {
     return new Result(status, data, null, true);
 }
 
-export function requestError4xx(status: NumberRange<400, 499>, error: string): Result<void>
+export function requestError4xx(status: NumberRange<400, 500>, error: string): Result<void>
 {
     return new Result(status, null, error, false);
 }
 
-export function serverError5xx(status: NumberRange<500, 599>, error: string): Result<void>
+export function serverError5xx(status: NumberRange<500, 600>, error: string): Result<void>
 {
     return new Result(status, null, error, false);
 }
