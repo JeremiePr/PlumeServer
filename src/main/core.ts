@@ -87,12 +87,16 @@ export class PlumeServer
                 };
 
                 const result = await handle(0, args);
-                response.status(result.status).json(result.isSuccess ? result.data : result.error);
+
+                if (result.isSuccess)
+                    response.status(result.status).json(result.data);
+                else
+                    response.status(result.status).send({ message: result.error });
             }
             catch (err)
             {
                 const error: any = err;
-                response.status(500).json(error);
+                response.status(500).send({ message: error.message });
             }
         };
     }
